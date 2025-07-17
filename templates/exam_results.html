@@ -1,0 +1,52 @@
+<!-- exam_results.html -->
+{% extends 'base.html' %}
+{% block title %}Exam Results: {{ exam.title }}{% endblock %}
+{% block page_title %}Exam Results: {{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="exam-container">
+    <div class="exam-header">
+        <h1>Exam Results</h1>
+        <p>Here are your results for {{ exam.title }}</p>
+    </div>
+    
+    <div class="results-container">
+        <div class="result-card score-card">
+            <h3>{{ attempt.score }}</h3>
+            <p>Your Score</p>
+        </div>
+        
+        <div class="result-card total-card">
+            <h3>{{ exam.number_of_questions }}</h3>
+            <p>Total Questions</p>
+        </div>
+        
+        <div class="result-card cutoff-card">
+            <h3>{{ exam.cutoff_score }}</h3>
+            <p>Cutoff Score</p>
+        </div>
+        
+        <div class="result-card status-card {% if attempt.score < exam.cutoff_score %}status-fail{% endif %}">
+            <h3>{% if attempt.score >= exam.cutoff_score %}Pass{% else %}Fail{% endif %}</h3>
+            <p>Status</p>
+        </div>
+    </div>
+    
+    <div class="exam-meta">
+        <div class="meta-item">
+            <i class="fas fa-user"></i>
+            <span>Student: {{ request.user.username }}</span>
+        </div>
+        <div class="meta-item">
+            <i class="fas fa-calendar"></i>
+            <span>Date: {{ attempt.start_time|date:"M d, Y" }}</span>
+        </div>
+    </div>
+    
+    <div class="exam-actions">
+        <a href="{% url 'student_dashboard' %}" class="btn btn-outline">
+            <i class="fas fa-arrow-left"></i> Back to Dashboard
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,111 @@
+<!-- student_exam.html -->
+{% extends 'base.html' %}
+{% block title %}{{ exam.title }}{% endblock %}
+{% block page_title %}{{ exam.title }}{% endblock %}
+
+{% block content %}
+<div class="exam-container">
+    <div class="exam-header">
+        <h1>{{ exam.title }}</h1>
+        <div class="timer">
+            <span>Time Remaining: </span>
+            <span id="time-remaining">{{ exam.duration_minutes }}:00</span>
+        </div>
+    </div>
+
+    <div class="exam-tools">
+        <button onclick="openCalculator()" class="btn btn-outline">
+            <i class="fas fa-calculator"></i> Calculator
+        </button>
+    </div>
+
+    <form id="exam-form" method="post" action="{% url 'submit_exam' exam.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="answers" id="answers">
+        
+        {% for question in questions %}
+        <div class="question">
+            <div class="question-header">
+                <span class="question-number">Question {{ forloop.counter }}</span>
+                <span class="question-points">1 point</span>
+            </div>
+            <p class="question-text">{{ question.text }}</p>
+            
+            <div class="options-grid">
+                <label class="option">
+                    <input type="radio" name="q{{ question.id }}" value="A">
+                    <span class="option-letter">A</span>
+                    <span class="option-text">{{ question.option_a }}</span>
+                </label>
+                
+                <label class="option">
+                    <input type="radio" name="q{{ question.id }}" value="B">
+                    <span class="option-letter">B</span>
+                    <span class="option-text">{{ question.option_b }}</span>
+                </label>
+                
+                <label class="option">
+                    <input type="radio" name="q{{ question.id }}" value="C">
+                    <span class="option-letter">C</span>
+                    <span class="option-text">{{ question.option_c }}</span>
+                </label>
+                
+                <label class="option">
+                    <input type="radio" name="q{{ question.id }}" value="D">
+                    <span class="option-letter">D</span>
+                    <span class="option-text">{{ question.option_d }}</span>
+                </label>
+            </div>
+        </div>
+        {% endfor %}
+        
+        <div class="exam-actions">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-paper-plane"></i> Submit Exam
+            </button>
+        </div>
+    </form>
+</div>
+
+{% block scripts %}
+<script>
+    // Timer functionality
+    let duration = {{ exam.duration_minutes }} * 60; // in seconds
+    const timerElement = document.getElementById('time-remaining');
+    
+    function startTimer() {
+        const timerInterval = setInterval(() => {
+            const minutes = Math.floor(duration / 60);
+            const seconds = duration % 60;
+            timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+            
+            if (duration <= 0) {
+                clearInterval(timerInterval);
+                // Auto submit the form when time is up
+                document.getElementById('exam-form').submit();
+            } else {
+                duration--;
+            }
+        }, 1000);
+    }
+    
+    // Start the timer when the page loads
+    startTimer();
+    
+    // Collect answers and put in hidden input before submit
+    document.getElementById('exam-form').addEventListener('submit', function(e) {
+        const answers = {};
+        const radioGroups = document.querySelectorAll('input[type="radio"]:checked');
+        radioGroups.forEach(radio => {
+            const questionId = radio.name.substring(1); // remove the 'q'
+            answers[questionId] = radio.value;
+        });
+        document.getElementById('answers').value = JSON.stringify(answers);
+    });
+    
+    function openCalculator() {
+        alert("Calculator would open here. This is a placeholder.");
+    }
+</script>
+{% endblock %}
+{% endblock %}

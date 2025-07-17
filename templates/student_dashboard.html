@@ -1,0 +1,62 @@
+<!-- student_dashboard.html -->
+{% extends 'base.html' %}
+{% block title %}Student Dashboard{% endblock %}
+{% block page_title %}Student Dashboard{% endblock %}
+
+{% block content %}
+    <div class="section-header">
+        <h2>Available Exams</h2>
+    </div>
+
+    <div class="dashboard-grid">
+        {% for exam in exams %}
+        <div class="card">
+            <div class="card-header">
+                <h3>{{ exam.title }}</h3>
+                <div class="exam-status {% if exam.id in completed_exams %}status-completed{% else %}status-active{% endif %}">
+                    {% if exam.id in completed_exams %}Completed{% else %}Active{% endif %}
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="exam-meta">
+                    <div class="meta-item">
+                        <i class="fas fa-question-circle"></i>
+                        <span>{{ exam.number_of_questions }} Questions</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-clock"></i>
+                        <span>{{ exam.duration_minutes }} Minutes</span>
+                    </div>
+                    <div class="meta-item">
+                        <i class="fas fa-graduation-cap"></i>
+                        <span>{{ exam.cutoff_score }} Cutoff</span>
+                    </div>
+                </div>
+                <p class="exam-date">
+                    <i class="fas fa-calendar-alt"></i> 
+                    {{ exam.start_time|date:"M d, Y H:i" }} - {{ exam.end_time|date:"M d, Y H:i" }}
+                </p>
+                <div class="card-actions">
+                    {% if exam.id in completed_exams %}
+                    <a href="{% url 'exam_results' exam.id %}" class="btn btn-sm btn-primary">
+                        <i class="fas fa-chart-bar"></i> View Results
+                    </a>
+                    {% else %}
+                    <a href="{% url 'start_exam' exam.id %}" class="btn btn-sm btn-success">
+                        <i class="fas fa-play-circle"></i> Start Exam
+                    </a>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        <div class="empty-state">
+            <div class="empty-icon">
+                <i class="fas fa-book-open"></i>
+            </div>
+            <h3>No Exams Available</h3>
+            <p>There are currently no active exams. Please check back later.</p>
+        </div>
+        {% endfor %}
+    </div>
+{% endblock %}

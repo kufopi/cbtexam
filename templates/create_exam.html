@@ -1,0 +1,25 @@
+<!-- exam/templates/create_exam.html -->
+{% extends 'base.html' %}
+{% block title %}Create Exam{% endblock %}
+{% block content %}
+<h1>Create New Exam</h1>
+<form method="post">
+    {% csrf_token %}
+    <label>Title: <input type="text" name="title" required></label>
+    <label>Number of Questions: <input type="number" name="number_of_questions" required></label>
+    <label>Duration (minutes！
+
+): <input type="number" name="duration_minutes" required></label>
+    <label>Start Time: <input type="datetime-local" name="start_time" required></label>
+    <label>End Time: <input type="datetime-local" name="end_time" required></label>
+    <label>Cutoff Score: <input type="number" name="cutoff_score" required></label>
+    <button type="submit">Create Exam</button>
+</form>
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

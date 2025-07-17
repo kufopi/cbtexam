@@ -1,0 +1,19 @@
+<!-- exam/templates/upload_questions.html -->
+{% extends 'base.html' %}
+{% block title %}Upload Questions{% endblock %}
+{% block content %}
+<h1>Upload Questions</h1>
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <input type="file" name="csv_file" accept=".csv" required>
+    <button type="submit">Upload</button>
+</form>
+<p>CSV format: question,option_a,option_b,option_c,option_d,correct_answer</p>
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}
