@@ -298,3 +298,89 @@ def delete_subject(request, subject_id):
         messages.error(request, 'Subject not found.')
     
     return redirect('manage_subjects')
+
+# exam/views.py
+from django.contrib.auth.models import User
+from django.db import IntegrityError
+
+@login_required
+def bulk_upload_students(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Access denied.")
+    
+    success_count = 0
+    error_messages = []
+    
+    if request.method == 'POST':
+        csv_file = request.FILES.get('csv_file')
+        
+        if not csv_file.name.endswith('.csv'):
+            messages.error(request, 'Please upload a CSV file.')
+            return redirect('bulk_upload_students')
+        
+        try:
+            decoded_file = csv_file.read().decode('utf-8').splitlines()
+            csv_reader = csv.DictReader(decoded_file)
+            
+            for row_num, row in enumerate(csv_reader, 2):  # Start at 2 for header row
+                try:
+                    username = row['username'].strip()
+                    first_name = row.get('first_name', '').strip()
+                    last_name = row.get('last_name', '').strip()
+                    password = row.get('password', 'defaultpassword').strip()
+                    
+                    # Create user
+                    user = User.objects.create_user(
+                        username=username,
+                        password=password,
+                        first_name=first_name,
+                        last_name=last_name,
+                        is_staff=False,
+                        is_superuser=False
+                    )
+                    success_count += 1
+                    
+                except KeyError as e:
+                    error_messages.append(f"Row {row_num}: Missing column - {str(e)}")
+                except IntegrityError:
+                    error_messages.append(f"Row {row_num}: Username '{username}' already exists")
+                except Exception as e:
+                    error_messages.append(f"Row {row_num}: {str(e)}")
+            
+            if success_count > 0:
+                messages.success(request, f'Successfully created {success_count} student accounts')
+            if error_messages:
+                messages.warning(request, f'Completed with {len(error_messages)} errors')
+                request.session['bulk_upload_errors'] = error_messages
+            
+        except Exception as e:
+            messages.error(request, f'Error processing file: {str(e)}')
+        
+        return redirect('bulk_upload_students')
+    
+    # Get errors from session if any
+    errors = request.session.pop('bulk_upload_errors', [])
+    
+    return render(request, 'bulk_upload_students.html', {
+        'errors': errors
+    })
+
+# exam/views.py
+from django.http import HttpResponse
+
+@login_required
+def download_student_template(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Access denied.")
+    
+    # Create CSV template
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="student_upload_template.csv"'
+    
+    writer = csv.writer(response)
+    writer.writerow(['username', 'first_name', 'last_name', 'password'])
+    writer.writerow(['student1', 'John', 'Doe', 'pass123'])
+    writer.writerow(['student2', 'Jane', 'Smith', 'pass456'])
+    writer.writerow(['student3', 'Alex', 'Jones', 'pass789'])
+    
+    return response

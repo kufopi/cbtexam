@@ -1,0 +1,130 @@
+<!-- templates/bulk_upload_students.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white">
+            <h3 class="mb-0">
+                <i class="fas fa-users mr-2"></i>Bulk Student Upload
+            </h3>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-file-csv mr-2"></i>Upload CSV
+                            </h5>
+                            
+                            <form method="post" enctype="multipart/form-data">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="csv_file" class="font-weight-bold">CSV File</label>
+                                    <div class="custom-file">
+                                        <input type="file" class="custom-file-input" 
+                                               id="csv_file" name="csv_file" accept=".csv" required>
+                                        <label class="custom-file-label" for="csv_file">Choose file</label>
+                                    </div>
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                                    <i class="fas fa-upload mr-2"></i>Upload Students
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-info-circle mr-2"></i>Instructions
+                            </h5>
+                            
+                            <div class="mb-3">
+                                <h6>CSV Format Requirements:</h6>
+                                <ul class="pl-3">
+                                    <li>First row must be header with columns</li>
+                                    <li>Required columns: <code>username</code></li>
+                                    <li>Optional columns: <code>first_name</code>, <code>last_name</code>, <code>password</code></li>
+                                </ul>
+                            </div>
+                            
+                            <div class="mb-3">
+                                <h6>Example CSV:</h6>
+                                <div class="bg-light p-3 rounded">
+                                    <pre class="mb-0">username,first_name,last_name,password
+student1,John,Doe,pass123
+student2,Jane,Smith,pass456
+student3,Alex,Jones,pass789</pre>
+                                </div>
+                            </div>
+                            
+                            <a href="{% url 'download_student_template' %}" 
+                               class="btn btn-outline-primary btn-block">
+                                <i class="fas fa-download mr-2"></i>Download Template
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if errors %}
+            <div class="card border-danger mt-4">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle mr-2"></i>
+                        Upload Errors ({{ errors|length }})
+                    </h5>
+                </div>
+                <div class="card-body p-0">
+                    <ul class="list-group list-group-flush">
+                        {% for error in errors %}
+                        <li class="list-group-item text-danger">{{ error }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // Update file input label with selected file name
+    document.querySelector('.custom-file-input').addEventListener('change', function(e) {
+        var fileName = e.target.files[0].name;
+        var nextSibling = e.target.nextElementSibling;
+        nextSibling.innerText = fileName;
+    });
+</script>
+
+<style>
+    .card {
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    
+    .card-header {
+        padding: 1.25rem 1.5rem;
+    }
+    
+    .custom-file-label::after {
+        content: "Browse";
+    }
+    
+    .list-group-item {
+        padding: 1rem 1.5rem;
+        border-left: 3px solid #dc3545;
+    }
+    
+    pre {
+        background: #f8f9fa;
+        padding: 15px;
+        border-radius: 5px;
+        font-size: 14px;
+    }
+</style>
+{% endblock %}
