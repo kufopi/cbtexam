@@ -1,0 +1,128 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <h2 class="mb-4">Manage Subjects</h2>
+    
+    <div class="card mb-4 shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">Add New Subject</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" action="{% url 'add_subject' %}">
+                {% csrf_token %}
+                <div class="form-row">
+                    <div class="col-md-6 mb-3">
+                        <label for="subject-name" class="font-weight-bold">Subject Name</label><br>
+                        <input type="text" class="form-control form-control-lg" 
+                               id="subject-name" name="name" 
+                               placeholder="e.g., Mathematics" required>
+                        <small class="form-text text-muted">Full subject name</small>
+                    </div>
+                    
+                    <div class="col-md-4 mb-3">
+                        <label for="subject-code" class="font-weight-bold">Subject Code</label><br>
+                        <input type="text" class="form-control form-control-lg" 
+                               id="subject-code" name="code" 
+                               placeholder="e.g., MATH" required>
+                        <small class="form-text text-muted">Short uppercase code</small>
+                    </div>
+                    
+                    <div class="col-md-2 mb-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                            <i class="fas fa-plus-circle mr-2"></i>Add
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <div class="card shadow-sm">
+        <div class="card-header bg-light">
+            <h5 class="mb-0">Existing Subjects</h5>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead class="thead-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Created By</th>
+                            <th>Created At</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for subject in subjects %}
+                        <tr>
+                            <td class="align-middle">
+                                <span class="font-weight-bold">{{ subject.name }}</span>
+                            </td>
+                            <td class="align-middle">
+                                <span class="badge badge-primary badge-pill p-2">
+                                    {{ subject.code }}
+                                </span>
+                            </td>
+                            <td class="align-middle">{{ subject.created_by.username }}</td>
+                            <td class="align-middle">{{ subject.created_at|date:"M d, Y" }}</td>
+                            <td class="align-middle">
+                                <form method="post" action="{% url 'delete_subject' subject.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-outline-danger btn-sm">
+                                        <i class="fas fa-trash-alt mr-1"></i> Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-book-open fa-2x mb-3 text-muted"></i>
+                                <p class="h5 text-muted">No subjects found</p>
+                                <p class="text-muted">Add your first subject using the form above</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-control-lg {
+        height: calc(2.5rem + 2px);
+        padding: 0.75rem 1rem;
+        font-size: 1.1rem;
+    }
+    
+    .table th {
+        font-weight: 600;
+        text-transform: uppercase;
+        font-size: 0.85rem;
+        letter-spacing: 0.5px;
+        border-top: none;
+    }
+    
+    .table td {
+        vertical-align: middle;
+    }
+    
+    .badge-pill {
+        min-width: 70px;
+        font-size: 0.9rem;
+    }
+    
+    .form-row > div {
+        padding-right: 15px;
+        padding-left: 15px;
+    }
+    
+    .card-header h5 {
+        font-size: 1.1rem;
+    }
+</style>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "admin/change_form.html" %}
+
+{% block content %}
+  {{ block.super }}
+  <div class="submit-row">
+    <a href="{% url 'admin:export_exam_results' original.pk %}" class="button">
+      Export Exam Results
+    </a>
+  </div>
+{% endblock %}

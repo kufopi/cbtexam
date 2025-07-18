@@ -2,18 +2,309 @@
 {% extends 'base.html' %}
 {% block title %}Upload Questions{% endblock %}
 {% block content %}
-<h1>Upload Questions</h1>
-<form method="post" enctype="multipart/form-data">
-    {% csrf_token %}
-    <input type="file" name="csv_file" accept=".csv" required>
-    <button type="submit">Upload</button>
-</form>
-<p>CSV format: question,option_a,option_b,option_c,option_d,correct_answer</p>
-{% if messages %}
-    <ul>
+<div class="form-container">
+    <div class="form-header">
+        <h1>Upload Questions</h1>
+        <p>Add multiple questions using a CSV file</p>
+    </div>
+    
+    {% if messages %}
+    <div class="messages">
         {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+            {{ message }}
+        </div>
         {% endfor %}
-    </ul>
-{% endif %}
+    </div>
+    {% endif %}
+    
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="upload-container">
+            <div class="form-group">
+                <label for="subject">Subject:</label>
+                    <select class="form-control" id="subject" name="subject" required>
+                        <option value="">Select Subject</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+                <div class="form-hint">Select the subject for these questions</div>
+            </div>
+            
+            <div class="file-upload" onclick="document.getElementById('csv_file').click()">
+                <i class="fas fa-cloud-upload-alt"></i>
+                <h3>Upload CSV File</h3>
+                <p>Click to browse or drag and drop your CSV file here</p>
+                <p class="file-requirements">Supports: .csv files (max 10MB)</p>
+            </div>
+            <input type="file" id="csv_file" name="csv_file" accept=".csv" class="file-input" required>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-upload"></i> Upload Questions
+            </button>
+            <a href="{% url 'examiner_dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+    
+    <div class="csv-instructions">
+        <h3><i class="fas fa-info-circle"></i> CSV Format Requirements</h3>
+        <div class="instructions-grid">
+            <div class="instruction-item">
+                <div class="instruction-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h4>Required Columns</h4>
+                    <p>question,option_a,option_b,option_c,option_d,correct_answer</p>
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h4>Correct Answer Format</h4>
+                    <p>Must be A, B, C, or D (case insensitive)</p>
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">
+                    <i class="fas fa-check-circle"></i>
+                </div>
+                <div>
+                    <h4>File Encoding</h4>
+                    <p>UTF-8 encoding recommended</p>
+                </div>
+            </div>
+            
+            <div class="instruction-item">
+                <div class="instruction-icon">
+                    <i class="fas fa-download"></i>
+                </div>
+                <div>
+                    <h4>Sample Template</h4>
+                    <a href="#" class="btn btn-sm btn-outline">
+                        <i class="fas fa-file-csv"></i> Download Template
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .form-container {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .form-header h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: var(--secondary);
+        font-size: 16px;
+    }
+    
+    .upload-container {
+        margin-bottom: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--dark);
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .form-hint {
+        font-size: 12px;
+        color: var(--secondary);
+        margin-top: 5px;
+    }
+    
+    .file-upload {
+        border: 2px dashed var(--border);
+        border-radius: var(--radius);
+        padding: 40px 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .file-upload:hover {
+        border-color: var(--primary);
+        background: var(--primary-light);
+    }
+    
+    .file-upload i {
+        font-size: 48px;
+        color: var(--primary);
+        margin-bottom: 15px;
+    }
+    
+    .file-upload h3 {
+        margin-bottom: 10px;
+        font-size: 20px;
+    }
+    
+    .file-upload p {
+        color: var(--secondary);
+        margin-bottom: 8px;
+        font-size: 14px;
+    }
+    
+    .file-requirements {
+        color: var(--secondary);
+        font-size: 12px;
+        margin-top: 10px;
+    }
+    
+    .file-input {
+        display: none;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .csv-instructions {
+        background: #f8fafc;
+        border-left: 4px solid var(--primary);
+        padding: 20px;
+        border-radius: 0 var(--radius) var(--radius) 0;
+        margin-top: 40px;
+    }
+    
+    .csv-instructions h3 {
+        margin-bottom: 20px;
+        color: var(--primary);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 20px;
+    }
+    
+    .instructions-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 20px;
+    }
+    
+    .instruction-item {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+    
+    .instruction-icon {
+        color: var(--primary);
+        font-size: 18px;
+        min-width: 24px;
+        margin-top: 3px;
+    }
+    
+    .instruction-item h4 {
+        font-size: 16px;
+        margin-bottom: 5px;
+    }
+    
+    .instruction-item p {
+        color: var(--secondary);
+        font-size: 14px;
+    }
+    
+    .alert {
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        margin-bottom: 25px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .alert i {
+        font-size: 20px;
+    }
+</style>
+
+<script>
+    // File upload interaction
+    const fileInput = document.getElementById('csv_file');
+    const uploadArea = document.querySelector('.file-upload');
+    
+    fileInput.addEventListener('change', function() {
+        if (this.files.length > 0) {
+            uploadArea.innerHTML = `
+                <i class="fas fa-file-csv" style="color: #10b981;"></i>
+                <h3>${this.files[0].name}</h3>
+                <p>${formatFileSize(this.files[0].size)}</p>
+                <p class="file-requirements">Click to change file</p>
+            `;
+        }
+    });
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+</script>
 {% endblock %}

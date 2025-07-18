@@ -11,4 +11,7 @@ urlpatterns = [
     path('exam/<int:exam_id>/', views.start_exam, name='start_exam'),
     path('exam/<int:exam_id>/submit/', views.submit_exam, name='submit_exam'),
     path('exam/<int:exam_id>/results/', views.exam_results, name='exam_results'),
+    path('manage-subjects/', views.manage_subjects, name='manage_subjects'),
+    path('add-subject/', views.add_subject, name='add_subject'),
+    path('delete-subject/<int:subject_id>/', views.delete_subject, name='delete_subject'),
 ]

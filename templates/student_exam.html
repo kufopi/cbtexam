@@ -14,7 +14,7 @@
     </div>
 
     <div class="exam-tools">
-        <button onclick="openCalculator()" class="btn btn-outline">
+        <button id="calculator-btn" class="btn btn-outline">
             <i class="fas fa-calculator"></i> Calculator
         </button>
     </div>
@@ -67,45 +67,439 @@
     </form>
 </div>
 
+<!-- Calculator Modal -->
+<div id="calculator-modal" class="modal">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Calculator</h3>
+            <button class="close">&times;</button>
+        </div>
+        <div class="calculator">
+            <div class="calculator-display">
+                <div class="previous-operand" id="previous-operand"></div>
+                <div class="current-operand" id="current-operand">0</div>
+            </div>
+            <div class="calculator-keys">
+                <button class="calculator-btn function" data-action="memory-clear">MC</button>
+                <button class="calculator-btn function" data-action="memory-recall">MR</button>
+                <button class="calculator-btn function" data-action="memory-add">M+</button>
+                <button class="calculator-btn function" data-action="clear">C</button>
+                <button class="calculator-btn function" data-action="delete">⌫</button>
+                <button class="calculator-btn operation" data-action="divide">÷</button>
+                
+                <button class="calculator-btn number">7</button>
+                <button class="calculator-btn number">8</button>
+                <button class="calculator-btn number">9</button>
+                <button class="calculator-btn operation" data-action="multiply">×</button>
+                
+                <button class="calculator-btn number">4</button>
+                <button class="calculator-btn number">5</button>
+                <button class="calculator-btn number">6</button>
+                <button class="calculator-btn operation" data-action="subtract">−</button>
+                
+                <button class="calculator-btn number">1</button>
+                <button class="calculator-btn number">2</button>
+                <button class="calculator-btn number">3</button>
+                <button class="calculator-btn operation" data-action="add">+</button>
+                
+                <button class="calculator-btn number">0</button>
+                <button class="calculator-btn number">.</button>
+                <button class="calculator-btn operation" data-action="percentage">%</button>
+                <button class="calculator-btn operation" data-action="calculate">=</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Calculator Modal */
+    .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5);
+        align-items: center;
+        justify-content: center;
+    }
+    
+    .modal-content {
+        background-color: white;
+        border-radius: 12px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+        width: 320px;
+        overflow: hidden;
+    }
+    
+    .modal-header {
+        background: var(--primary);
+        color: white;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .modal-header h3 {
+        margin: 0;
+        font-size: 18px;
+    }
+    
+    .close {
+        background: none;
+        border: none;
+        color: white;
+        font-size: 24px;
+        cursor: pointer;
+    }
+    
+    /* Calculator Styles */
+    .calculator {
+        background: #f8f9fa;
+        border-radius: 0 0 12px 12px;
+        padding: 20px;
+    }
+    
+    .calculator-display {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 15px;
+        text-align: right;
+        min-height: 80px;
+    }
+    
+    .previous-operand {
+        color: #94a3b8;
+        font-size: 14px;
+        min-height: 20px;
+    }
+    
+    .current-operand {
+        font-size: 28px;
+        font-weight: 600;
+        color: var(--dark);
+    }
+    
+    .calculator-keys {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        grid-gap: 10px;
+    }
+    
+    .calculator-btn {
+        padding: 15px;
+        border: none;
+        border-radius: 8px;
+        font-size: 18px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    
+    .calculator-btn:active {
+        transform: scale(0.95);
+    }
+    
+    .number {
+        background: white;
+        color: var(--dark);
+        border: 1px solid #e2e8f0;
+    }
+    
+    .number:hover {
+        background: #f1f5f9;
+    }
+    
+    .operation {
+        background: #f0f9ff;
+        color: var(--primary);
+        border: 1px solid #bae6fd;
+    }
+    
+    .operation:hover {
+        background: #e0f2fe;
+    }
+    
+    .function {
+        background: #f8fafc;
+        color: var(--secondary);
+        border: 1px solid #f1f5f9;
+    }
+    
+    .function:hover {
+        background: #f1f5f9;
+    }
+    
+    .calculator-btn[data-action="calculate"] {
+        background: var(--primary);
+        color: white;
+    }
+    
+    .calculator-btn[data-action="calculate"]:hover {
+        background: var(--primary-dark);
+    }
+</style>
+
 {% block scripts %}
 <script>
     // Timer functionality
     let duration = {{ exam.duration_minutes }} * 60; // in seconds
     const timerElement = document.getElementById('time-remaining');
+    let timerInterval;
+    let fiveMinuteWarningShown = false;
+    let oneMinuteWarningShown = false;
     
     function startTimer() {
-        const timerInterval = setInterval(() => {
+        timerInterval = setInterval(() => {
             const minutes = Math.floor(duration / 60);
             const seconds = duration % 60;
             timerElement.textContent = `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
             
+            // Show 5-minute warning
+            if (duration <= 300 && !fiveMinuteWarningShown) {
+                alert("Warning: Only 5 minutes remaining!");
+                fiveMinuteWarningShown = true;
+            }
+            
+            // Show 1-minute warning and turn timer red
+            if (duration <= 60 && !oneMinuteWarningShown) {
+                timerElement.style.color = '#ef4444';
+                timerElement.style.fontWeight = 'bold';
+                alert("Warning: Only 1 minute remaining!");
+                oneMinuteWarningShown = true;
+            }
+            
             if (duration <= 0) {
                 clearInterval(timerInterval);
                 // Auto submit the form when time is up
-                document.getElementById('exam-form').submit();
+                submitExamForm();
             } else {
                 duration--;
             }
         }, 1000);
     }
-    
-    // Start the timer when the page loads
-    startTimer();
-    
-    // Collect answers and put in hidden input before submit
-    document.getElementById('exam-form').addEventListener('submit', function(e) {
+
+    // Collect answers and submit form
+    function submitExamForm() {
         const answers = {};
         const radioGroups = document.querySelectorAll('input[type="radio"]:checked');
+        
         radioGroups.forEach(radio => {
             const questionId = radio.name.substring(1); // remove the 'q'
             answers[questionId] = radio.value;
         });
+        
         document.getElementById('answers').value = JSON.stringify(answers);
+        document.getElementById('exam-form').submit();
+    }
+    
+    // Start the timer when the page loads
+    startTimer();
+    
+    // Handle form submission
+    document.getElementById('exam-form').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent default form submission
+        submitExamForm();
     });
     
-    function openCalculator() {
-        alert("Calculator would open here. This is a placeholder.");
+    // Calculator functionality
+    class Calculator {
+        constructor(previousOperandElement, currentOperandElement) {
+            this.previousOperandElement = previousOperandElement;
+            this.currentOperandElement = currentOperandElement;
+            this.clear();
+            this.memory = 0;
+        }
+        
+        clear() {
+            this.currentOperand = '0';
+            this.previousOperand = '';
+            this.operation = undefined;
+        }
+        
+        delete() {
+            this.currentOperand = this.currentOperand.toString().slice(0, -1);
+            if (this.currentOperand === '') {
+                this.currentOperand = '0';
+            }
+        }
+        
+        appendNumber(number) {
+            if (number === '.' && this.currentOperand.includes('.')) return;
+            if (this.currentOperand === '0' && number !== '.') {
+                this.currentOperand = number;
+            } else {
+                this.currentOperand = this.currentOperand.toString() + number.toString();
+            }
+        }
+        
+        chooseOperation(operation) {
+            if (this.currentOperand === '') return;
+            if (this.previousOperand !== '') {
+                this.compute();
+            }
+            this.operation = operation;
+            this.previousOperand = this.currentOperand;
+            this.currentOperand = '';
+        }
+        
+        compute() {
+            let computation;
+            const prev = parseFloat(this.previousOperand);
+            const current = parseFloat(this.currentOperand);
+            
+            // FIXED: Syntax error in condition
+            if (isNaN(prev) || isNaN(current)) return;
+            
+            switch (this.operation) {
+                case '+':
+                    computation = prev + current;
+                    break;
+                case '−':
+                    computation = prev - current;
+                    break;
+                case '×':
+                    computation = prev * current;
+                    break;
+                case '÷':
+                    // Handle division by zero
+                    if (current === 0) {
+                        alert("Cannot divide by zero!");
+                        this.clear();
+                        return;
+                    }
+                    computation = prev / current;
+                    break;
+                case '%':
+                    computation = prev % current;
+                    break;
+                default:
+                    return;
+            }
+            
+            this.currentOperand = computation;
+            this.operation = undefined;
+            this.previousOperand = '';
+        }
+        
+        memoryClear() {
+            this.memory = 0;
+        }
+        
+        memoryRecall() {
+            this.currentOperand = this.memory.toString();
+        }
+        
+        memoryAdd() {
+            const current = parseFloat(this.currentOperand);
+            if (!isNaN(current)) {
+                this.memory += current;
+            }
+        }
+        
+        getDisplayNumber(number) {
+            const stringNumber = number.toString();
+            const integerDigits = parseFloat(stringNumber.split('.')[0]);
+            const decimalDigits = stringNumber.split('.')[1];
+            let integerDisplay;
+            
+            if (isNaN(integerDigits)) {
+                integerDisplay = '';
+            } else {
+                integerDisplay = integerDigits.toLocaleString('en', {
+                    maximumFractionDigits: 0
+                });
+            }
+            
+            if (decimalDigits != null) {
+                return `${integerDisplay}.${decimalDigits}`;
+            } else {
+                return integerDisplay;
+            }
+        }
+        
+        updateDisplay() {
+            this.currentOperandElement.innerText = this.getDisplayNumber(this.currentOperand);
+            if (this.operation != null) {
+                this.previousOperandElement.innerText = 
+                    `${this.getDisplayNumber(this.previousOperand)} ${this.operation}`;
+            } else {
+                this.previousOperandElement.innerText = '';
+            }
+        }
     }
+    
+    // Setup calculator
+    const previousOperandElement = document.getElementById('previous-operand');
+    const currentOperandElement = document.getElementById('current-operand');
+    const calculator = new Calculator(previousOperandElement, currentOperandElement);
+    
+    // Handle calculator button clicks
+    document.querySelectorAll('.calculator-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            if (button.classList.contains('number')) {
+                calculator.appendNumber(button.innerText);
+                calculator.updateDisplay();
+            }
+            
+            if (button.classList.contains('operation')) {
+                calculator.chooseOperation(button.innerText);
+                calculator.updateDisplay();
+            }
+            
+            if (button.dataset.action === 'calculate') {
+                calculator.compute();
+                calculator.updateDisplay();
+            }
+            
+            if (button.dataset.action === 'clear') {
+                calculator.clear();
+                calculator.updateDisplay();
+            }
+            
+            if (button.dataset.action === 'delete') {
+                calculator.delete();
+                calculator.updateDisplay();
+            }
+            
+            if (button.dataset.action === 'memory-clear') {
+                calculator.memoryClear();
+            }
+            
+            if (button.dataset.action === 'memory-recall') {
+                calculator.memoryRecall();
+                calculator.updateDisplay();
+            }
+            
+            if (button.dataset.action === 'memory-add') {
+                calculator.memoryAdd();
+            }
+        });
+    });
+    
+    // Calculator modal functionality
+    const calculatorModal = document.getElementById('calculator-modal');
+    const calculatorBtn = document.getElementById('calculator-btn');
+    const closeBtn = document.querySelector('.close');
+    
+    calculatorBtn.addEventListener('click', () => {
+        calculatorModal.style.display = 'flex';
+    });
+    
+    closeBtn.addEventListener('click', () => {
+        calculatorModal.style.display = 'none';
+    });
+    
+    window.addEventListener('click', (e) => {
+        if (e.target === calculatorModal) {
+            calculatorModal.style.display = 'none';
+        }
+    });
 </script>
 {% endblock %}
 {% endblock %}

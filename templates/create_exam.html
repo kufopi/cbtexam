@@ -2,24 +2,181 @@
 {% extends 'base.html' %}
 {% block title %}Create Exam{% endblock %}
 {% block content %}
-<h1>Create New Exam</h1>
-<form method="post">
-    {% csrf_token %}
-    <label>Title: <input type="text" name="title" required></label>
-    <label>Number of Questions: <input type="number" name="number_of_questions" required></label>
-    <label>Duration (minutes！
-
-): <input type="number" name="duration_minutes" required></label>
-    <label>Start Time: <input type="datetime-local" name="start_time" required></label>
-    <label>End Time: <input type="datetime-local" name="end_time" required></label>
-    <label>Cutoff Score: <input type="number" name="cutoff_score" required></label>
-    <button type="submit">Create Exam</button>
-</form>
-{% if messages %}
-    <ul>
+<div class="form-container">
+    <div class="form-header">
+        <h1>Create New Exam</h1>
+        <p>Configure all exam parameters for your students</p>
+    </div>
+    
+    {% if messages %}
+    <div class="messages">
         {% for message in messages %}
-            <li{% if message.tags %} class="{{ message.tags }}"{% endif %}>{{ message }}</li>
+        <div class="alert alert-{% if message.tags == 'error' %}error{% else %}success{% endif %}">
+            <i class="fas fa-{% if message.tags == 'error' %}exclamation-circle{% else %}check-circle{% endif %}"></i>
+            {{ message }}
+        </div>
         {% endfor %}
-    </ul>
-{% endif %}
+    </div>
+    {% endif %}
+    
+    <form method="post">
+        {% csrf_token %}
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Exam Title</label>
+                <input type="text" name="title" class="form-control" placeholder="e.g. Biology Midterm" required>
+                <div class="form-hint">A descriptive name for your exam</div>
+            </div>
+            
+            <div class="form-group">
+               <label for="subject">Subject:</label>
+                    <select class="form-control" id="subject" name="subject" required>
+                        <option value="">Select Subject</option>
+                        {% for subject in subjects %}
+                            <option value="{{ subject.id }}">{{ subject.name }}</option>
+                        {% endfor %}
+                    </select>
+            </div>
+            
+            <div class="form-group">
+                <label>Number of Questions</label>
+                <input type="number" name="number_of_questions" class="form-control" min="5" max="100" required>
+                <div class="form-hint">Between 5-100 questions</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Duration (minutes)</label>
+                <input type="number" name="duration_minutes" class="form-control" min="2" max="180" required>
+                <div class="form-hint">Exam duration in minutes</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Start Time</label>
+                <input type="datetime-local" name="start_time" class="form-control" required>
+                <div class="form-hint">When the exam becomes available</div>
+            </div>
+            
+            <div class="form-group">
+                <label>End Time</label>
+                <input type="datetime-local" name="end_time" class="form-control" required>
+                <div class="form-hint">When the exam closes</div>
+            </div>
+            
+            <div class="form-group">
+                <label>Cutoff Score</label>
+                <input type="number" name="cutoff_score" class="form-control" min="1" required>
+                <div class="form-hint">Minimum passing score</div>
+            </div>
+        </div>
+        
+        <div class="form-actions">
+            <button type="submit" class="btn btn-success">
+                <i class="fas fa-save"></i> Create Exam
+            </button>
+            <a href="{% url 'examiner_dashboard' %}" class="btn btn-outline">
+                <i class="fas fa-times"></i> Cancel
+            </a>
+        </div>
+    </form>
+</div>
+
+<style>
+    .form-container {
+        background: white;
+        border-radius: var(--radius);
+        box-shadow: var(--card-shadow);
+        padding: 30px;
+        max-width: 800px;
+        margin: 0 auto;
+    }
+    
+    .form-header {
+        text-align: center;
+        margin-bottom: 30px;
+    }
+    
+    .form-header h1 {
+        font-size: 28px;
+        margin-bottom: 10px;
+    }
+    
+    .form-header p {
+        color: var(--secondary);
+        font-size: 16px;
+    }
+    
+    .form-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: var(--dark);
+        font-size: 14px;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 12px 15px;
+        border: 2px solid var(--border);
+        border-radius: 10px;
+        font-size: 15px;
+        font-family: 'Poppins', sans-serif;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        outline: none;
+        border-color: var(--primary);
+        box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+    }
+    
+    .form-hint {
+        font-size: 12px;
+        color: var(--secondary);
+        margin-top: 5px;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 20px;
+    }
+    
+    .alert {
+        padding: 14px 20px;
+        border-radius: 10px;
+        font-size: 15px;
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .alert-error {
+        background: rgba(239, 68, 68, 0.1);
+        color: var(--danger);
+        border: 1px solid rgba(239, 68, 68, 0.2);
+    }
+    
+    .alert-success {
+        background: rgba(16, 185, 129, 0.1);
+        color: var(--success);
+        border: 1px solid rgba(16, 185, 129, 0.2);
+    }
+    
+    .alert i {
+        font-size: 20px;
+    }
+</style>
 {% endblock %}
