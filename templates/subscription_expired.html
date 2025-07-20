@@ -1,0 +1,35 @@
+<!-- templates/subscription_expired.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-lg mt-5">
+        <div class="card-header bg-danger text-white">
+            <h1 class="card-title">
+                <i class="fas fa-exclamation-triangle mr-2"></i>
+                Subscription Expired
+            </h1>
+        </div>
+        <div class="card-body text-center py-5">
+            <div class="display-1 text-danger mb-4">
+                <i class="fas fa-calendar-times"></i>
+            </div>
+            <h2 class="mb-3">Your system access has expired</h2>
+            <p class="lead mb-4">
+                The subscription for this CBT system ended on 
+                <strong>{{ subscription.end_date|date:"F d, Y" }}</strong>.
+            </p>
+            
+            {% if request.user.is_superuser %}
+            <a href="{% url 'activate_subscription' %}" class="btn btn-primary btn-lg py-3 px-5">
+                <i class="fas fa-key mr-2"></i> Activate System
+            </a>
+            {% else %}
+            <div class="alert alert-info">
+                Please contact your system administrator to renew the subscription
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

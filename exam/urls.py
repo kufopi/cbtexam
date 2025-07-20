@@ -1,6 +1,7 @@
 # exam/urls.py
 from django.urls import path
 from . import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('', views.dashboard, name='dashboard'),
@@ -16,4 +17,10 @@ urlpatterns = [
     path('delete-subject/<int:subject_id>/', views.delete_subject, name='delete_subject'),
     path('bulk-upload-students/', views.bulk_upload_students, name='bulk_upload_students'),
     path('download-student-template/', views.download_student_template, name='download_student_template'),
+    path('subscription-expired/', views.subscription_expired, name='subscription_expired'),
+    path('activate-subscription/', views.activate_subscription, name='activate_subscription'),
+    path('examiner/exam/<int:exam_id>/preview/', views.preview_exam, name='preview_exam'),
+    path('examiner/exam/<int:exam_id>/results/', views.exam_results_report, name='exam_results_report'),
+    path('login/', auth_views.LoginView.as_view(), name='login'),
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
 ]

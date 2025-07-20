@@ -1,0 +1,101 @@
+<!-- templates/activate_subscription.html -->
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card shadow-lg mt-5">
+        <div class="card-header bg-primary text-white">
+            <h1 class="card-title">
+                <i class="fas fa-key mr-2"></i>
+                Activate System Subscription
+            </h1>
+        </div>
+        <div class="card-body">
+            {% if success %}
+            <div class="alert alert-success">
+                <i class="fas fa-check-circle fa-2x float-left mr-3"></i>
+                <div class="ml-5">
+                    {{ success|safe }}
+                </div>
+                <div class="clearfix"></div>
+            </div>
+            <div class="text-center mt-4">
+                <a href="{% url 'dashboard' %}" class="btn btn-primary btn-lg">
+                    Go to Dashboard
+                </a>
+            </div>
+            {% else %}
+            <div class="row">
+                <div class="col-lg-6">
+                    <div class="card mb-4">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-info-circle mr-2"></i>Current Status
+                            </h5>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Status:</span>
+                                    <span class="badge badge-{% if subscription.is_active %}success{% else %}danger{% endif %}">
+                                        {{ subscription.is_active }}
+                                    </span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Expires:</span>
+                                    <span>{{ subscription.end_date|date:"M d, Y" }}</span>
+                                </div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Current Code:</span>
+                                    <span class="font-weight-bold">{{ current_code }}</span>
+                                </div>
+                            </div>
+                            
+                            {% if error %}
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-circle mr-2"></i>
+                                {{ error }}
+                            </div>
+                            {% endif %}
+                            
+                            <form method="post">
+                                {% csrf_token %}
+                                <div class="form-group">
+                                    <label for="activation-code" class="font-weight-bold">
+                                        Activation Code
+                                    </label>
+                                    <input type="text" class="form-control form-control-lg" 
+                                           id="activation-code" name="code" required
+                                           placeholder="Enter 15-character code">
+                                    
+                                </div>
+                                <button type="submit" class="btn btn-primary btn-lg w-100 py-3">
+                                    <i class="fas fa-bolt mr-2"></i>Activate System
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6">
+                    <div class="card">
+                        <div class="card-body">
+                            <h5 class="card-title text-primary">
+                                <i class="fas fa-lightbulb mr-2"></i>Code Requirements
+                            </h5>
+                            <div class="mb-3">
+                                <p>Reach out to Developer for activation codes:</p>
+                               
+                            </div>
+                            
+                            <div class="alert alert-danger">
+                                <i class="fas fa-exclamation-triangle mr-2"></i>
+                                Each code can only be used once
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

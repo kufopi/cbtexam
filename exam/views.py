@@ -9,6 +9,8 @@ from django.contrib import messages
 import json
 from django.db.models import Case, When, F, IntegerField, Sum
 from django.db.models import Avg
+from django.shortcuts import get_object_or_404
+
 
 @login_required
 def dashboard(request):
@@ -33,18 +35,19 @@ def examiner_dashboard(request):
     total_attempts = ExamAttempt.objects.filter(exam__created_by=request.user).count()
     
     # Calculate average pass rate
-    passed_attempts = ExamAttempt.objects.filter(
+    completed_attempts = ExamAttempt.objects.filter(
         exam__created_by=request.user,
         completed=True
-    ).annotate(
-        passed=Case(
-            When(score__gte=F('exam__cutoff_score'), then=1),
-            default=0,
-            output_field=IntegerField()
-        )
-    ).aggregate(passed=Sum('passed'))['passed'] or 0
+    )
     
-    average_pass_rate = round((passed_attempts / total_attempts * 100), 2) if total_attempts > 0 else 0
+    total_completed = completed_attempts.count()
+    passed_attempts = completed_attempts.filter(
+        score__gte=F('exam__cutoff_score')
+    ).count()
+    
+    average_pass_rate = round(
+        (passed_attempts / total_completed * 100), 2
+    ) if total_completed > 0 else 0
     
     # Calculate exam statuses and additional metrics
     current_time = timezone.now()
@@ -384,3 +387,148 @@ def download_student_template(request):
     writer.writerow(['student3', 'Alex', 'Jones', 'pass789'])
     
     return response
+
+
+# exam/views.py
+from .models import Subscription
+from django.utils import timezone
+from datetime import timedelta
+
+@login_required
+def subscription_expired(request):
+    subscription = Subscription.get_current_subscription()
+    return render(request, 'subscription_expired.html', {
+        'subscription': subscription
+    })
+
+from .models import ActivationCode
+# exam/views.py
+@login_required
+def activate_subscription(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Access denied.")
+    
+    subscription = Subscription.get_current_subscription()
+    error = None
+    success = None
+    current_code = subscription.activation_code.code if subscription.activation_code else "NO-CODE"
+    
+    if request.method == 'POST':
+        code = request.POST.get('code', '').strip().upper()
+        
+        # Validate code format
+        is_valid, validation_msg = validate_activation_code(code)
+        
+        if not is_valid:
+            error = f"Invalid code format: {validation_msg}"
+        else:
+            try:
+                activation_code = ActivationCode.objects.get(code=code)
+                
+                if activation_code.is_used():
+                    error = "This code has already been used"
+                else:
+                    # Extend subscription by 1 year
+                    subscription.end_date = timezone.now() + timedelta(days=365)  #change later 365
+                    subscription.status = Subscription.SYSTEM_ACTIVE
+                    
+                    # Mark code as used
+                    activation_code.mark_used(request.user)
+                    
+                    # Generate new code for next activation
+                    new_code = ActivationCode.create_new_code()
+                    subscription.activation_code = new_code
+                    subscription.save()
+                    
+                    success = (
+                        "Subscription extended by 1 year!<br>"
+                        f"<strong>New Activation Code:</strong> {new_code.code}<br>"
+                        "Save this code for future renewals"
+                    )
+            except ActivationCode.DoesNotExist:
+                error = "Invalid activation code: Code not found in system"
+    
+    return render(request, 'activate_subscription.html', {
+        'subscription': subscription,
+        'error': error,
+        'success': success,
+        'current_code': current_code
+    })
+
+
+from django.conf import settings
+from django.utils import timezone
+from datetime import timedelta
+import random
+import string
+from collections import Counter
+def validate_activation_code(code):
+    """
+    Validate activation code format:
+    - Exactly 15 characters
+    """
+    code = code.strip().upper()
+    
+    # 1. Length check
+    if len(code) != 15:
+        return False, "Wrong code"
+    
+    # 2. Digit check
+    if not any(char.isdigit() for char in code):
+        return False, "Entry of invalid code can ruin database integrity"
+    
+    # 3. Special character check
+    special_chars = "!@#$%^&*()_+-=[]{}|;:,.<>?/"
+    if not any(char in special_chars for char in code):
+        return False, "Invalid code: Your database is at risk"
+    
+    # 4. Required letters check with EXACT counts
+    required_letters = {
+        'B': 1, 'A': 3, 'K': 2, 
+        'N': 1, 'U': 1, 'F': 1, 'O': 1
+    }
+    
+    letter_counts = {}
+    for char in code:
+        if char.isalpha():
+            letter_counts[char] = letter_counts.get(char, 0) + 1
+    
+    # Check for EXACT required counts
+    for letter, required_count in required_letters.items():
+        if letter_counts.get(letter, 0) < required_count:
+            return False, f"Code requires {required_count} '{letter}' character(s)"
+    
+    return True, "Valid code"
+
+
+
+# Preview View
+@login_required
+def preview_exam(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    questions = exam.get_random_questions()
+    return render(request, 'preview_exam.html', {
+        'exam': exam,
+        'questions': questions
+    })
+
+# Results Report View
+@login_required
+def exam_results_report(request, exam_id):
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    attempts = ExamAttempt.objects.filter(exam=exam, completed=True).select_related('user')
+    
+    # Calculate statistics
+    total_attempts = attempts.count()
+    passed_attempts = attempts.filter(score__gte=exam.cutoff_score).count()
+    pass_rate = round((passed_attempts / total_attempts * 100), 2) if total_attempts > 0 else 0
+    average_score = attempts.aggregate(avg_score=Avg('score'))['avg_score'] or 0
+
+    return render(request, 'exam_results_report.html', {
+        'exam': exam,
+        'attempts': attempts,
+        'total_attempts': total_attempts,
+        'passed_attempts': passed_attempts,
+        'pass_rate': pass_rate,
+        'average_score': round(average_score, 1)
+    })

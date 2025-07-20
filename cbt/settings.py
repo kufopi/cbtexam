@@ -48,6 +48,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'exam.middleware.SubscriptionMiddleware',  # Custom middleware for subscription checks
 ]
 
 ROOT_URLCONF = 'cbt.urls'

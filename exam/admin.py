@@ -2,7 +2,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
-from .models import Question, Exam, ExamAttempt, Subject
+from .models import Question, Exam, ExamAttempt, Subject, Subscription
 from django.http import HttpResponse
 import csv
 from django.urls import path, reverse
@@ -91,3 +91,16 @@ class ExamAttemptAdmin(admin.ModelAdmin):
 
 admin.site.unregister(User)
 admin.site.register(User, CustomUserAdmin)
+
+# exam/admin.py
+@admin.register(Subscription)
+class SubscriptionAdmin(admin.ModelAdmin):
+    list_display = ('status', 'start_date', 'end_date', 'days_remaining')
+    readonly_fields = ('status', 'days_remaining')
+    
+    def days_remaining(self, obj):
+        from django.utils import timezone
+        if obj.end_date > timezone.now():
+            return (obj.end_date - timezone.now()).days
+        return 0
+    days_remaining.short_description = 'Days Remaining'
