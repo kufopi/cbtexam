@@ -532,3 +532,62 @@ def exam_results_report(request, exam_id):
         'pass_rate': pass_rate,
         'average_score': round(average_score, 1)
     })
+
+# Add this to your exam/views.py
+
+@login_required
+def download_questions_template(request):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Access denied.")
+    
+    # Create CSV template
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = 'attachment; filename="questions_upload_template.csv"'
+    
+    writer = csv.writer(response)
+    # Header row
+    writer.writerow(['question', 'option_a', 'option_b', 'option_c', 'option_d', 'correct_answer'])
+    
+    # Sample data rows
+    writer.writerow([
+        'What is the capital of France?',
+        'London',
+        'Berlin',
+        'Paris',
+        'Madrid',
+        'C'
+    ])
+    writer.writerow([
+        'Which planet is known as the Red Planet?',
+        'Venus',
+        'Mars',
+        'Jupiter',
+        'Saturn',
+        'B'
+    ])
+    writer.writerow([
+        'What is 2 + 2?',
+        '3',
+        '4',
+        '5',
+        '6',
+        'B'
+    ])
+    writer.writerow([
+        'Who wrote "Romeo and Juliet"?',
+        'Charles Dickens',
+        'William Shakespeare',
+        'Jane Austen',
+        'Mark Twain',
+        'B'
+    ])
+    writer.writerow([
+        'What is the chemical symbol for gold?',
+        'Go',
+        'Gd',
+        'Au',
+        'Ag',
+        'C'
+    ])
+    
+    return response

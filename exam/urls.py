@@ -23,4 +23,6 @@ urlpatterns = [
     path('examiner/exam/<int:exam_id>/results/', views.exam_results_report, name='exam_results_report'),
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    # Add this line to your exam/urls.py urlpatterns list
+    path('download-questions-template/', views.download_questions_template, name='download_questions_template'),    
 ]
