@@ -24,5 +24,6 @@ urlpatterns = [
     path('login/', auth_views.LoginView.as_view(), name='login'),
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     # Add this line to your exam/urls.py urlpatterns list
-    path('download-questions-template/', views.download_questions_template, name='download_questions_template'),    
+    path('download-questions-template/', views.download_questions_template, name='download_questions_template'),
+    path('examiner/exam/<int:exam_id>/export-csv/', views.export_exam_results_csv, name='export_exam_results_csv'),    
 ]

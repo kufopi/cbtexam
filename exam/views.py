@@ -591,3 +591,47 @@ def download_questions_template(request):
     ])
     
     return response
+
+
+@login_required
+def export_exam_results_csv(request, exam_id):
+    if not request.user.is_superuser:
+        return HttpResponseForbidden("Access denied.")
+    
+    exam = get_object_or_404(Exam, id=exam_id, created_by=request.user)
+    attempts = ExamAttempt.objects.filter(exam=exam, completed=True).select_related('user')
+    
+    # Create CSV response
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="exam_results_{exam.title.replace(" ", "_")}.csv"'
+    
+    writer = csv.writer(response)
+    
+    # Write header row
+    writer.writerow([
+        'Student Name', 
+        'Username', 
+        'Score', 
+        'Status', 
+        'Time Taken', 
+        'Completed At',
+        'Percentage'
+    ])
+    
+    # Write data rows
+    for attempt in attempts:
+        status = 'Passed' if attempt.score >= exam.cutoff_score else 'Failed'
+        time_taken = attempt.completion_time - attempt.start_time if attempt.completion_time else None
+        percentage = round((attempt.score / exam.number_of_questions) * 100, 2) if exam.number_of_questions > 0 else 0
+        
+        writer.writerow([
+            attempt.user.get_full_name() or 'N/A',
+            attempt.user.username,
+            f'{attempt.score}/{exam.number_of_questions}',
+            status,
+            str(time_taken).split('.')[0] if time_taken else 'N/A',
+            attempt.completion_time.strftime('%Y-%m-%d %H:%M:%S') if attempt.completion_time else 'N/A',
+            f'{percentage}%'
+        ])
+    
+    return response
