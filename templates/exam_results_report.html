@@ -269,11 +269,11 @@
     </table>
     
     <!-- Export Button -->
-    <div class="export-actions">
-        <button class="btn-export">
-            <i class="fas fa-file-export"></i> Export Results to CSV
-        </button>
-    </div>
+        <div class="export-actions">
+            <button class="btn-export" id="exportBtn" data-exam-id="{{ exam.id }}">
+                <i class="fas fa-file-export"></i> Export Results to CSV
+            </button>
+        </div>
         <script>
             document.getElementById('exportBtn').addEventListener('click', function() {
                 const examId = this.getAttribute('data-exam-id');
